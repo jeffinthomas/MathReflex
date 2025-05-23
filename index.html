@@ -539,7 +539,8 @@
 
         // --- Event Listeners ---
         startButton.addEventListener('click', showDifficultyScreen); // Go to difficulty screen
-        restartButton.addEventListener('click', showDifficultyScreen); // Go to difficulty screen after game over
+        //restartButton.addEventListener('click', showDifficultyScreen); // Go to difficulty screen after game over
+        restartButton.addEventListener('click', () => startGame(selectedDifficulty)); // Restart game with the previously selected difficulty
 
         simpleButton.addEventListener('click', () => startGame('simple'));
         mediumButton.addEventListener('click', () => startGame('medium'));
