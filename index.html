@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Blitz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c; /* Dark background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Prevent scrolling */
+        }
+        .game-container {
+            background-color: #2d3748; /* Slightly lighter dark background for container */
+            border-radius: 1.5rem; /* More rounded corners */
+            padding: 2rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            width: 95%; /* Responsive width */
+            max-width: 500px; /* Max width for larger screens */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 500px; /* Ensure a decent height */
+            position: relative; /* For absolute positioning of elements */
+        }
+        .game-button {
+            width: 100%;
+            padding: 1.5rem 1rem; /* Larger touch target */
+            margin: 0.75rem 0; /* More spacing */
+            font-size: 2.25rem; /* Large font for answers */
+            font-weight: 700;
+            border-radius: 1.25rem; /* Rounded buttons */
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            border: none;
+            color: #ffffff;
+            background-color: #4a5568; /* Button background */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+        .game-button:hover {
+            background-color: #636b77; /* Darker hover */
+            transform: translateY(-2px);
+        }
+        .game-button:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        .start-screen, .game-over-screen, .difficulty-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(45, 55, 72, 0.95); /* Semi-transparent overlay */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 1.5rem;
+            z-index: 10;
+        }
+        .start-screen h1, .difficulty-screen h1 {
+            font-size: 3rem; /* Large title */
+            color: #a0aec0;
+            margin-bottom: 1.5rem;
+        }
+        .start-screen p, .difficulty-screen p {
+            font-size: 1.25rem;
+            color: #cbd5e0;
+            margin-bottom: 2rem;
+        }
+        .start-button, .restart-button, .difficulty-button {
+            padding: 1rem 2.5rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background-color: #48bb78; /* Green button */
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+            margin-bottom: 1rem; /* Spacing for difficulty buttons */
+        }
+        .start-button:hover, .restart-button:hover, .difficulty-button:hover {
+            background-color: #38a169; /* Darker green hover */
+            transform: translateY(-2px);
+        }
+        .start-button:active, .restart-button:active, .difficulty-button:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        .game-over-screen h2 {
+            font-size: 2.5rem;
+            color: #fc8181; /* Red for game over */
+            margin-bottom: 1rem;
+        }
+        .game-over-screen p {
+            font-size: 1.5rem;
+            color: #cbd5e0;
+            margin-bottom: 2rem;
+        }
+        .timer-bar-container {
+            width: 100%;
+            height: 15px;
+            background-color: #4a5568;
+            border-radius: 9999px; /* Fully rounded */
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+        .timer-bar {
+            height: 100%;
+            background-color: #48bb78; /* Green timer */
+            width: 100%;
+            border-radius: 9999px;
+            transition: width 0.1s linear; /* Smooth transition for timer bar */
+        }
+        .score-display {
+            font-size: 1.5rem;
+            color: #a0aec0;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+        .high-score-display {
+            font-size: 1.2rem;
+            color: #63b3ed; /* Blue for high score */
+            margin-top: 0.5rem;
+            font-weight: 700;
+        }
+        .problem-display {
+            font-size: 3rem; /* Large problem text */
+            color: #ffffff;
+            margin-bottom: 2rem;
+            font-weight: 700;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .game-container {
+                padding: 1.5rem;
+                min-height: 400px;
+            }
+            .game-button {
+                padding: 1.25rem 0.75rem;
+                font-size: 1.75rem;
+            }
+            .start-screen h1, .difficulty-screen h1 {
+                font-size: 2.5rem;
+            }
+            .start-screen p, .difficulty-screen p {
+                font-size: 1rem;
+            }
+            .start-button, .restart-button, .difficulty-button {
+                padding: 0.8rem 2rem;
+                font-size: 1.25rem;
+            }
+            .game-over-screen h2 {
+                font-size: 2rem;
+            }
+            .game-over-screen p {
+                font-size: 1.25rem;
+            }
+            .score-display {
+                font-size: 1.25rem;
+            }
+            .high-score-display {
+                font-size: 1rem;
+            }
+            .problem-display {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer" class="game-container">
+        <div id="startScreen" class="start-screen">
+            <h1>Math Blitz!</h1>
+            <p>Tap the correct answer before time runs out!</p>
+            <p class="high-score-display">High Score: <span id="startHighScore">0</span></p>
+            <button id="startButton" class="start-button">Start Game</button>
+        </div>
+
+        <div id="difficultyScreen" class="difficulty-screen hidden">
+            <h1>Choose Difficulty</h1>
+            <button id="simpleButton" class="difficulty-button" data-difficulty="simple">Simple</button>
+            <button id="mediumButton" class="difficulty-button" data-difficulty="medium">Medium</button>
+            <button id="hardButton" class="difficulty-button" data-difficulty="hard">Hard</button>
+        </div>
+
+        <div id="gameElements" class="hidden w-full flex flex-col items-center">
+            <div class="score-display">Score: <span id="scoreValue">0</span></div>
+            <div class="timer-bar-container">
+                <div id="timerBar" class="timer-bar"></div>
+            </div>
+            <div id="problemDisplay" class="problem-display mb-8"></div>
+            <div class="answers-container w-full flex flex-col gap-4">
+                <button id="answerButton1" class="game-button"></button>
+                <button id="answerButton2" class="game-button"></button>
+            </div>
+        </div>
+
+        <div id="gameOverScreen" class="game-over-screen hidden">
+            <h2>Game Over!</h2>
+            <p>Your final score: <span id="finalScore">0</span></p>
+            <p class="high-score-display">High Score: <span id="gameOverHighScore">0</span></p>
+            <button id="restartButton" class="restart-button">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const gameContainer = document.getElementById('gameContainer');
+        const startScreen = document.getElementById('startScreen');
+        const difficultyScreen = document.getElementById('difficultyScreen');
+        const gameElements = document.getElementById('gameElements');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const startButton = document.getElementById('startButton');
+        const restartButton = document.getElementById('restartButton');
+        const simpleButton = document.getElementById('simpleButton');
+        const mediumButton = document.getElementById('mediumButton');
+        const hardButton = document.getElementById('hardButton');
+        const scoreValue = document.getElementById('scoreValue');
+        const timerBar = document.getElementById('timerBar');
+        const problemDisplay = document.getElementById('problemDisplay');
+        const answerButton1 = document.getElementById('answerButton1');
+        const answerButton2 = document.getElementById('answerButton2');
+        const finalScoreDisplay = document.getElementById('finalScore');
+        const startHighScoreDisplay = document.getElementById('startHighScore');
+        const gameOverHighScoreDisplay = document.getElementById('gameOverHighScore');
+
+        // Game Variables
+        let score = 0;
+        let highScore = 0;
+        let timeLeft = 0;
+        let maxTimePerProblem = 3000; // Default initial time
+        let timerInterval;
+        let problem = {};
+        let gameActive = false;
+        let selectedDifficulty = 'medium'; // Default difficulty
+
+        // Sound Synthesizers (using Tone.js)
+        const correctSynth = new Tone.Synth({
+            oscillator: { type: "sine" },
+            envelope: { attack: 0.02, decay: 0.1, sustain: 0.05, release: 0.1 }
+        }).toDestination();
+        const incorrectSynth = new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: "sawtooth" },
+            envelope: { attack: 0.005, decay: 0.1, sustain: 0.05, release: 0.2 }
+        }).toDestination();
+        const gameOverSynth = new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: "triangle" },
+            envelope: { attack: 0.01, decay: 0.5, sustain: 0.1, release: 0.8 }
+        }).toDestination();
+
+        /**
+         * Plays a sound for a correct answer.
+         */
+        function playCorrectSound() {
+            correctSynth.triggerAttackRelease("C5", "8n");
+        }
+
+        /**
+         * Plays a sound for an incorrect answer.
+         */
+        function playIncorrectSound() {
+            incorrectSynth.triggerAttackRelease(["C3", "B2"], "8n");
+        }
+
+        /**
+         * Plays a sound for game over.
+         */
+        function playGameOverSound() {
+            gameOverSynth.triggerAttackRelease(["C4", "G3", "C3"], "0.5");
+        }
+
+        /**
+         * Initializes the game state, showing the start screen and loading high score.
+         */
+        function initGame() {
+            score = 0;
+            scoreValue.textContent = score;
+            timerBar.style.width = '100%';
+            gameActive = false;
+
+            // Load high score from localStorage
+            const storedHighScore = localStorage.getItem('mathBlitzHighScore');
+            if (storedHighScore) {
+                highScore = parseInt(storedHighScore);
+            } else {
+                highScore = 0;
+            }
+            startHighScoreDisplay.textContent = highScore;
+            gameOverHighScoreDisplay.textContent = highScore;
+
+            startScreen.classList.remove('hidden');
+            difficultyScreen.classList.add('hidden');
+            gameElements.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+        }
+
+        /**
+         * Shows the difficulty selection screen.
+         */
+        function showDifficultyScreen() {
+            startScreen.classList.add('hidden');
+            difficultyScreen.classList.remove('hidden');
+        }
+
+        /**
+         * Starts the game with the selected difficulty.
+         * @param {string} difficulty - The chosen difficulty ('simple', 'medium', 'hard').
+         */
+        function startGame(difficulty) {
+            selectedDifficulty = difficulty; // Set the global difficulty
+            // Start Tone.js context on user interaction (required by browsers)
+            if (Tone.context.state !== 'running') {
+                Tone.start();
+            }
+
+            difficultyScreen.classList.add('hidden');
+            gameElements.classList.remove('hidden');
+            gameOverScreen.classList.add('hidden');
+            score = 0;
+            scoreValue.textContent = score;
+
+            // Set initial time based on difficulty
+            if (selectedDifficulty === 'simple') {
+                maxTimePerProblem = 5000; // More time for simple
+            } else if (selectedDifficulty === 'medium') {
+                maxTimePerProblem = 3000; // Current time for medium
+            } else { // hard
+                maxTimePerProblem = 2000; // Less time for hard
+            }
+
+            gameActive = true;
+            generateProblem();
+            startTimer();
+        }
+
+        /**
+         * Ends the game, stopping the timer and showing the game over screen.
+         */
+        function endGame() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            playGameOverSound();
+
+            finalScoreDisplay.textContent = score;
+
+            // Update high score if current score is higher
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('mathBlitzHighScore', highScore);
+            }
+            gameOverHighScoreDisplay.textContent = highScore;
+
+            gameOverScreen.classList.remove('hidden');
+            gameElements.classList.add('hidden');
+        }
+
+        /**
+         * Generates a new math problem based on the selected difficulty.
+         */
+        function generateProblem() {
+            let num1, num2, num3, correctAnswer, problemText;
+            let operations = ['+', '-']; // Simple difficulty starts with these
+            let maxAbsNum = 10; // Simple difficulty max number
+            let useNegativeNumbers = false;
+            let useThreeNumbers = false;
+
+            if (selectedDifficulty === 'medium') {
+                operations = ['+', '-', '*', '/'];
+                maxAbsNum = 10 + Math.floor(score / 3);
+                if (maxAbsNum > 100) maxAbsNum = 100;
+                useNegativeNumbers = score >= 10;
+            } else if (selectedDifficulty === 'hard') {
+                operations = ['+', '-', '*', '/'];
+                maxAbsNum = 15 + Math.floor(score / 2); // Larger numbers for hard
+                if (maxAbsNum > 150) maxAbsNum = 150;
+                useNegativeNumbers = score >= 5; // Introduce negative numbers earlier for hard
+                useThreeNumbers = score >= 8 && Math.random() < 0.5; // 50% chance for 3 numbers after score 8
+            }
+
+            do {
+                num1 = Math.floor(Math.random() * maxAbsNum) + 1;
+                num2 = Math.floor(Math.random() * maxAbsNum) + 1;
+                num3 = useThreeNumbers ? (Math.floor(Math.random() * maxAbsNum) + 1) : 0; // Only generate if needed
+
+                // Apply negative numbers based on difficulty
+                if (useNegativeNumbers) {
+                    if (Math.random() < 0.3) num1 *= -1;
+                    if (Math.random() < 0.3) num2 *= -1;
+                    if (useThreeNumbers && Math.random() < 0.3) num3 *= -1;
+                }
+
+                let op1 = operations[Math.floor(Math.random() * operations.length)];
+                let op2 = useThreeNumbers ? operations[Math.floor(Math.random() * operations.length)] : '';
+
+                // Ensure valid division
+                if (op1 === '/' && num2 === 0) continue;
+                if (useThreeNumbers && op2 === '/' && num3 === 0) continue;
+
+                // Ensure positive result for simple subtraction if numbers were generated negatively
+                if (selectedDifficulty === 'simple' && op1 === '-' && num1 < num2) {
+                    [num1, num2] = [num2, num1];
+                }
+
+                // Calculate correct answer
+                try {
+                    if (useThreeNumbers) {
+                        // Use eval for simplicity with three numbers, but be cautious in production apps
+                        // For a real app, parse and calculate manually to avoid security risks
+                        problemText = `${num1} ${op1} ${num2} ${op2} ${num3} = ?`;
+                        correctAnswer = eval(`${num1} ${op1} ${num2} ${op2} ${num3}`);
+                    } else {
+                        problemText = `${num1} ${op1} ${num2} = ?`;
+                        correctAnswer = eval(`${num1} ${op1} ${num2}`);
+                    }
+
+                    // For division, ensure integer result
+                    if (op1 === '/' && correctAnswer % 1 !== 0) {
+                        correctAnswer = undefined; // Mark as invalid to regenerate
+                    } else if (useThreeNumbers && op2 === '/' && correctAnswer % 1 !== 0) {
+                        correctAnswer = undefined; // Mark as invalid to regenerate
+                    }
+
+                } catch (e) {
+                    correctAnswer = undefined; // Mark as invalid if eval fails (e.g., division by zero)
+                }
+
+            } while (correctAnswer === undefined || correctAnswer > 9999 || correctAnswer < -9999 || isNaN(correctAnswer)); // Regenerate if invalid or out of range
+
+            // Generate a wrong answer that is close but not identical
+            let wrongAnswer;
+            do {
+                const offset = Math.floor(Math.random() * 5) + 1;
+                wrongAnswer = correctAnswer + (Math.random() < 0.5 ? offset : -offset);
+            } while (wrongAnswer === correctAnswer || wrongAnswer > 9999 || wrongAnswer < -9999);
+
+            problem = {
+                text: problemText,
+                correct: correctAnswer,
+                wrong: wrongAnswer
+            };
+
+            displayProblem();
+        }
+
+        /**
+         * Displays the current math problem and shuffles the answer buttons.
+         */
+        function displayProblem() {
+            problemDisplay.textContent = problem.text;
+
+            const answers = [problem.correct, problem.wrong];
+            answers.sort(() => Math.random() - 0.5);
+
+            answerButton1.textContent = answers[0];
+            answerButton2.textContent = answers[1];
+
+            answerButton1.dataset.answer = answers[0];
+            answerButton2.dataset.answer = answers[1];
+        }
+
+        /**
+         * Starts or resets the timer for the current problem.
+         * Adjusts time per problem based on score and selected difficulty.
+         */
+        function startTimer() {
+            clearInterval(timerInterval);
+
+            let timeDecreaseFactor = 75; // Medium difficulty
+            if (selectedDifficulty === 'simple') {
+                timeDecreaseFactor = 25; // Slower decrease for simple
+            } else if (selectedDifficulty === 'hard') {
+                timeDecreaseFactor = 100; // Faster decrease for hard
+            }
+
+            // Adjust max time per problem based on score and difficulty
+            maxTimePerProblem = Math.max(800, maxTimePerProblem - (score * timeDecreaseFactor));
+            timeLeft = maxTimePerProblem;
+
+            timerBar.style.width = '100%';
+            timerBar.style.backgroundColor = '#48bb78';
+
+            timerInterval = setInterval(() => {
+                if (!gameActive) {
+                    clearInterval(timerInterval);
+                    return;
+                }
+
+                timeLeft -= 100;
+                const percentage = (timeLeft / maxTimePerProblem) * 100;
+                timerBar.style.width = `${percentage}%`;
+
+                if (percentage < 30) {
+                    timerBar.style.backgroundColor = '#fc8181';
+                } else if (percentage < 60) {
+                    timerBar.style.backgroundColor = '#f6ad55';
+                }
+
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 100);
+        }
+
+        /**
+         * Handles an answer button click.
+         * @param {Event} event - The click event.
+         */
+        function handleAnswerClick(event) {
+            if (!gameActive) return;
+
+            const selectedAnswer = parseInt(event.target.dataset.answer);
+
+            if (selectedAnswer === problem.correct) {
+                score++;
+                scoreValue.textContent = score;
+                playCorrectSound();
+                generateProblem();
+                startTimer();
+            } else {
+                playIncorrectSound();
+                endGame();
+            }
+        }
+
+        // --- Event Listeners ---
+        startButton.addEventListener('click', showDifficultyScreen); // Go to difficulty screen
+        restartButton.addEventListener('click', showDifficultyScreen); // Go to difficulty screen after game over
+
+        simpleButton.addEventListener('click', () => startGame('simple'));
+        mediumButton.addEventListener('click', () => startGame('medium'));
+        hardButton.addEventListener('click', () => startGame('hard'));
+
+        answerButton1.addEventListener('click', handleAnswerClick);
+        answerButton2.addEventListener('click', handleAnswerClick);
+
+        // Initialize the game when the page loads
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+<script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(registration => {
+            console.log('ServiceWorker registered: ', registration);
+          })
+          .catch(error => {
+            console.error('ServiceWorker registration failed: ', error);
+          });
+      });
+    }
+  </script>
+</body>
+</html>
